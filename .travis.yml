@@ -1,0 +1,30 @@
+sudo: required
+services:
+  - docker
+
+before_install:
+  - docker build -t omarabdo/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run omarabdo/react-test npm test -- --coverage
+
+after_success:
+  # Creating our custom images
+  - docker build -t omarabdo/multi-client ./client
+  - docker build -t omarabdo/multi-nginx ./nginx
+  - docker build -t omarabdo/multi-server ./server
+  - docker build -t omarabdo/multi-worker ./worker
+  # login to the docker CLI
+  # Explaining the following strange command
+  # echo "$DOCKER_PASSWORD" means get the travis password variable and hold it to stdin
+  # as far as I'm concerned, the pipe | is kinda just a separator but I'm not 100% sure
+  # then the docker login -u command is expecting 2 values
+  # the first one is the username, and we just mention our $docker_id variable that we've created in the Travis settings page
+  # and the second, the password, we tell docker that it can find it in the stdin
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+  # Take those images and push them to docker hub
+  - docker push omarabdo/multi-client
+  - docker push omarabdo/multi-nginx
+  - docker push omarabdo/multi-server
+  - docker push omarabdo/multi-worker
+
