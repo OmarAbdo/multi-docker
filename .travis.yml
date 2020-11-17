@@ -8,6 +8,7 @@ before_install:
 script:
   - docker run -e CI=true USERNAME/react-test npm test
 
+#
 after_success:
   # Creating our custom images
   - docker build -t omarabdo/multi-client ./client
